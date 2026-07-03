@@ -1,0 +1,184 @@
+/*
+------------------------------------------------------------
+SMC Milk Collection PWA
+Version : 1.0.0-alpha.1
+Build   : 0003
+File    : assets/css/layout.css
+Status  : Production
+------------------------------------------------------------
+*/
+
+body{
+    display:flex;
+    flex-direction:column;
+}
+
+/* ===========================
+   APPLICATION
+=========================== */
+
+#app{
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    width:100vw;
+}
+
+/* ===========================
+   HEADER
+=========================== */
+
+#topBar{
+    height:var(--header-height);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:8px 14px;
+    background:#fff;
+    border-bottom:1px solid var(--border);
+    box-shadow:var(--shadow);
+    z-index:20;
+}
+
+#collectionPoint{
+    font-weight:700;
+    font-size:18px;
+}
+
+#cycleInfo{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    font-weight:600;
+}
+
+#statusIndicators{
+    display:flex;
+    gap:12px;
+    align-items:center;
+}
+
+#statusIndicators > div{
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:#b0bec5;
+}
+
+/* ===========================
+   WORKSPACE
+=========================== */
+
+#workspace{
+    flex:1;
+    display:grid;
+    grid-template-columns:
+        var(--left-panel-width)
+        1fr
+        var(--right-panel-width);
+
+    overflow:hidden;
+    background:var(--bg);
+}
+
+/* ===========================
+   LEFT PANEL
+=========================== */
+
+#collectionPanel{
+    padding:10px;
+    border-right:1px solid var(--border);
+    overflow:hidden;
+    background:var(--surface2);
+}
+
+/* ===========================
+   CENTER PANEL
+=========================== */
+
+#registerPanel{
+    overflow:hidden;
+    padding:8px;
+    background:var(--surface);
+}
+
+/* ===========================
+   RIGHT PANEL
+=========================== */
+
+#utilityPanel{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    padding:8px;
+    border-left:1px solid var(--border);
+    background:var(--surface2);
+    transition:.25s;
+    overflow:hidden;
+}
+
+#utilityPanel.collapsed{
+    width:42px;
+    min-width:42px;
+}
+
+/* ===========================
+   FOOTER
+=========================== */
+
+#footerBar{
+    height:var(--footer-height);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 12px;
+    background:#fff;
+    border-top:1px solid var(--border);
+    font-size:12px;
+}
+
+/* ===========================
+   CONTAINERS
+=========================== */
+
+#collectionFormContainer,
+#registerContainer,
+#settingsContainer,
+#loggerContainer,
+#rawDataContainer{
+    width:100%;
+    height:100%;
+}
+
+/* ===========================
+   TABLET
+=========================== */
+
+@media(max-width:1200px){
+
+#workspace{
+    grid-template-columns:
+        28%
+        1fr
+        20%;
+}
+
+}
+
+/* ===========================
+   SMALL TABLETS
+=========================== */
+
+@media(max-width:900px){
+
+#workspace{
+    grid-template-columns:
+        34%
+        1fr;
+}
+
+#utilityPanel{
+    display:none;
+}
+
+}

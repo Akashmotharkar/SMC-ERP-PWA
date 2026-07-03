@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#1565c0">
+<meta name="description" content="SMC Milk Collection PWA">
+
+<title>SMC Milk Collection</title>
+
+<link rel="manifest" href="manifest.json">
+
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="stylesheet" href="assets/css/layout.css">
+<link rel="stylesheet" href="assets/css/components.css">
+<link rel="stylesheet" href="assets/css/forms.css">
+<link rel="stylesheet" href="assets/css/register.css">
+<link rel="stylesheet" href="assets/css/logger.css">
+</head>
+
+<body>
+
+<div id="app">
+
+<header id="topBar">
+    <div id="collectionPoint">Collection Point</div>
+
+    <div id="cycleInfo">
+        <span id="cycleLabel">Cycle</span>
+        <span id="cycleDates">01-10</span>
+    </div>
+
+    <div id="statusIndicators">
+        <div id="internetStatus"></div>
+        <div id="sheetStatus"></div>
+        <div id="analyzerStatus"></div>
+        <div id="weightStatus"></div>
+    </div>
+</header>
+
+<main id="workspace">
+
+<aside id="collectionPanel">
+    <div id="collectionFormContainer"></div>
+</aside>
+
+<section id="registerPanel">
+    <div id="registerContainer"></div>
+</section>
+
+<aside id="utilityPanel" class="collapsed">
+    <div id="settingsContainer"></div>
+    <div id="loggerContainer"></div>
+    <div id="rawDataContainer"></div>
+</aside>
+
+</main>
+
+<footer id="footerBar">
+    <span>SMC Milk Collection PWA</span>
+    <span id="version">v1.0.0-alpha.1 Build 0001</span>
+</footer>
+
+</div>
+
+<script type="module" src="assets/js/app.js"></script>
+
+</body>
+</html>

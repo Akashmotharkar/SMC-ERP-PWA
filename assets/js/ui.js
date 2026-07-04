@@ -381,10 +381,32 @@ const UI = (() => {
 
     }
 
-    function onSaveClicked() {
-
-        // Save workflow implemented later
-
+    async function onSaveClicked() {
+    
+        const activeTab = document
+            .querySelector(".entry-tab.active")
+            ?.dataset.tab;
+    
+        switch (activeTab) {
+    
+            case "cash":
+    
+                await Transaction.saveCash();
+    
+                break;
+    
+            case "feed":
+    
+                await Transaction.saveFeed();
+    
+                break;
+    
+            default:
+    
+                await Transaction.saveMilk();
+    
+        }
+    
     }
 
     return {

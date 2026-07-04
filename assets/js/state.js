@@ -2,9 +2,9 @@
 ------------------------------------------------------------
 SMC Milk Collection PWA
 Version : 1.0.0-alpha.1
-Build   : 0012
+Build   : 0020
 File    : assets/js/state.js
-Status  : Production
+Status  : Production Ready
 ------------------------------------------------------------
 */
 
@@ -12,107 +12,71 @@ Status  : Production
 
 const State = (() => {
 
-    const data = {
+    const state = {
 
-        app: {
-            version: "1.0.0-alpha.1",
-            build: "0012",
-            initialized: false
+        system: {
+
+            online: navigator.onLine,
+
+            analyzerConnected: false,
+
+            weightConnected: false,
+
+            sheetConnected: false,
+
+            bluetoothBusy: false,
+
+            currentCenter: null,
+
+            currentOperator: null
+
         },
-
-        operator: null,
-
-        collectionPoint: null,
-
-        selectedDate: new Date(),
 
         currentCustomer: null,
 
         currentSample: {
 
             fat: null,
+
             snf: null,
+
             clr: null,
+
             qty: null,
 
             rate: null,
+
             amount: null,
 
-            source: null,
-            timestamp: null
+            received: false
 
         },
 
-        draft: {
+        waiting: {
 
-            waitingCustomer: false,
-            waitingAnalyzer: false,
+            customer: false,
 
-            customerReady: false,
-            analyzerReady: false,
-
-            saveReady: false
+            analyzer: false
 
         },
 
         register: {
 
-            customers: [],
-            transactions: []
+            selectedDate: Utils.today(),
 
-        },
+            selectedCycle: null,
 
-        bluetooth: {
+            selectedCustomer: null
 
-            connected: false,
-            deviceName: "",
-            lastPacket: ""
-
-        },
-
-        analyzer: {
-
-            connected: false,
-            lastPacketTime: null
-
-        },
-
-        weighingScale: {
-
-            connected: false,
-            weight: null
-
-        },
-
-        sheets: {
-
-            connected: false,
-            syncing: false
-
-        },
-
-        internet: {
-
-            online: navigator.onLine
-
-        },
-
-        settings: {}
+        }
 
     };
 
+    function get(path) {
 
-
-    function get(path = null) {
-
-        if (!path)
-            return data;
-
-        return path.split(".").reduce((o, i) => o?.[i], data);
+        return path.split(".").reduce((o, i) => o?.[i], state);
 
     }
-
-
 
     function set(path, value) {
 
@@ -120,158 +84,116 @@ const State = (() => {
 
         const last = keys.pop();
 
-        let obj = data;
-
-        keys.forEach(key => {
-
-            if (!obj[key])
-                obj[key] = {};
-
-            obj = obj[key];
-
-        });
+        const obj = keys.reduce((o, i) => o[i], state);
 
         obj[last] = value;
 
     }
 
+    function resetSample() {
 
-
-    function merge(path, values) {
-
-        const current = get(path);
-
-        if (!current)
-            return;
-
-        Object.assign(current, values);
-
-    }
-
-
-
-    function resetCurrentSample() {
-
-        data.currentCustomer = null;
-
-        data.currentSample = {
+        state.currentSample = {
 
             fat: null,
+
             snf: null,
+
             clr: null,
+
             qty: null,
 
             rate: null,
+
             amount: null,
 
-            source: null,
-            timestamp: null
+            received: false
 
         };
 
-        data.draft = {
-
-            waitingCustomer: true,
-
-            waitingAnalyzer: true,
-
-            customerReady: false,
-
-            analyzerReady: false,
-
-            saveReady: false
-
-        };
-
-        Logger.info("Current Sample Reset");
-
     }
 
+    function resetCustomer() {
 
-
-    function analyzerReceived(sample) {
-
-        data.currentSample = {
-
-            ...data.currentSample,
-
-            ...sample,
-
-            timestamp: Date.now()
-
-        };
-
-        data.draft.analyzerReady = true;
-
-        updateDraftState();
+        state.currentCustomer = null;
 
     }
-
-
-
-    function customerSelected(customer) {
-
-        data.currentCustomer = customer;
-
-        data.draft.customerReady = true;
-
-        updateDraftState();
-
-    }
-
-
-
-    function updateRate(rate) {
-
-        data.currentSample.rate = rate;
-
-        calculateAmount();
-
-    }
-
-
-
-    function updateQuantity(qty) {
-
-        data.currentSample.qty = qty;
-
-        calculateAmount();
-
-    }
-
-
-
-    function calculateAmount() {
-
-        const rate = Number(data.currentSample.rate || 0);
-
-        const qty = Number(data.currentSample.qty || 0);
-
-        data.currentSample.amount = +(rate * qty).toFixed(2);
-
-    }
-
-
-
-    function updateDraftState() {
-
-        data.draft.saveReady =
-
-            data.draft.customerReady &&
-
-            data.draft.analyzerReady;
-
-    }
-
-
 
     function saveComplete() {
 
-        resetCurrentSample();
+        resetCustomer();
+
+        resetSample();
+
+        state.waiting.customer = false;
+        state.waiting.analyzer = false;
 
     }
 
+    function analyzerReceived(sample) {
 
+        state.currentSample = {
+
+            ...sample,
+
+            received: true
+
+        };
+
+        state.waiting.customer =
+            !state.currentCustomer;
+
+    }
+
+    function customerSelected(customer) {
+
+        state.currentCustomer = customer;
+
+        state.waiting.analyzer =
+            !state.currentSample.received;
+
+    }
+
+    function readyToSave() {
+
+        return (
+
+            state.currentCustomer &&
+            state.currentSample.received &&
+            state.currentSample.qty != null &&
+            state.currentSample.rate != null
+
+        );
+
+    }
+
+    function updateConnection(name, status) {
+
+        switch (name) {
+
+            case "analyzer":
+
+                state.system.analyzerConnected = status;
+                break;
+
+            case "weight":
+
+                state.system.weightConnected = status;
+                break;
+
+            case "sheet":
+
+                state.system.sheetConnected = status;
+                break;
+
+        }
+
+    }
+
+    function dump() {
+
+        return structuredClone(state);
+
+    }
 
     return {
 
@@ -279,19 +201,19 @@ const State = (() => {
 
         set,
 
-        merge,
+        dump,
 
-        resetCurrentSample,
+        resetSample,
+
+        resetCustomer,
 
         analyzerReceived,
 
         customerSelected,
 
-        updateRate,
+        readyToSave,
 
-        updateQuantity,
-
-        calculateAmount,
+        updateConnection,
 
         saveComplete
 

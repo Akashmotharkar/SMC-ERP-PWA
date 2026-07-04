@@ -1,0 +1,231 @@
+<!--
+------------------------------------------------------------
+SMC Milk Collection PWA
+Version : 1.0.0-alpha.1
+Build   : 0006
+File    : modules/ui/collection-form.html
+Status  : Production
+------------------------------------------------------------
+-->
+
+<div class="card collection-card">
+
+    <h2 class="panel-title">
+        Milk Collection
+    </h2>
+
+    <div class="field">
+
+        <label>Collection Point</label>
+
+        <input
+            id="collectionPointInput"
+            type="text"
+            readonly>
+
+    </div>
+
+    <div class="field">
+
+        <label>Date</label>
+
+        <input
+            id="collectionDate"
+            type="date">
+
+    </div>
+
+    <div class="field-row">
+
+        <div class="field id-field">
+
+            <label>Customer ID</label>
+
+            <input
+                id="customerId"
+                autocomplete="off"
+                inputmode="numeric">
+
+        </div>
+
+        <div class="field name-field">
+
+            <label>Name</label>
+
+            <input
+                id="customerName"
+                readonly>
+
+        </div>
+
+    </div>
+
+    <div class="tabs">
+
+        <div
+            class="tab active"
+            data-tab="milk">
+
+            Milk
+
+        </div>
+
+        <div
+            class="tab"
+            data-tab="cash">
+
+            Cash
+
+        </div>
+
+        <div
+            class="tab"
+            data-tab="feed">
+
+            Feed
+
+        </div>
+
+    </div>
+
+    <!-- Milk -->
+
+    <div
+        id="milkTab"
+        class="tab-page">
+
+        <div class="field-row">
+
+            <div class="field">
+
+                <label>Fat</label>
+
+                <input
+                    id="fat"
+                    readonly>
+
+            </div>
+
+            <div class="field">
+
+                <label>SNF</label>
+
+                <input
+                    id="snf"
+                    readonly>
+
+            </div>
+
+            <div class="field">
+
+                <label>CLR</label>
+
+                <input
+                    id="clr"
+                    readonly>
+
+            </div>
+
+        </div>
+
+        <div class="field-row">
+
+            <div class="field">
+
+                <label>Milk Qty</label>
+
+                <input
+                    id="milkQty"
+                    readonly>
+
+            </div>
+
+            <div class="field">
+
+                <label>Rate</label>
+
+                <input
+                    id="rate"
+                    readonly>
+
+            </div>
+
+        </div>
+
+        <div class="field">
+
+            <label>Amount</label>
+
+            <input
+                id="amount"
+                readonly>
+
+        </div>
+
+    </div>
+
+    <!-- Cash -->
+
+    <div
+        id="cashTab"
+        class="tab-page hidden">
+
+        <div class="field">
+
+            <label>Cash Amount</label>
+
+            <input
+                id="cashAmount"
+                type="number">
+
+        </div>
+
+        <div class="field">
+
+            <label>Remark</label>
+
+            <input
+                id="cashRemark">
+
+        </div>
+
+    </div>
+
+    <!-- Feed -->
+
+    <div
+        id="feedTab"
+        class="tab-page hidden">
+
+        <div class="field">
+
+            <label>Feed Item</label>
+
+            <select
+                id="feedItem">
+
+            </select>
+
+        </div>
+
+        <div class="field">
+
+            <label>Amount</label>
+
+            <input
+                id="feedAmount"
+                type="number">
+
+        </div>
+
+    </div>
+
+    <button
+        id="saveButton"
+        class="btn btn-success">
+
+        SAVE
+
+    </button>
+
+</div>

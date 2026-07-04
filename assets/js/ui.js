@@ -2,7 +2,7 @@
 ------------------------------------------------------------
 SMC Milk Collection PWA
 Version : 1.0.0-alpha.1
-Build   : 0014
+Build   : 0021
 File    : assets/js/ui.js
 Status  : Production Ready
 ------------------------------------------------------------
@@ -14,33 +14,12 @@ const UI = (() => {
 
     const el = {};
 
-    function initialize() {
-
-        cacheElements();
-
-        bindEvents();
-
-        initializeDate();
-
-        updateCycle();
-
-        updateConnectionIndicators();
-
-        Logger.info("UI Initialized");
-
-    }
-
-    function cacheElements() {
-
-        // Header
+    function cache() {
 
         el.collectionPoint = document.getElementById("collectionPoint");
         el.collectionDate = document.getElementById("collectionDate");
-        el.cycleText = document.getElementById("cycleText");
 
-        // Milk Form
-
-        el.customerID = document.getElementById("customerID");
+        el.customerId = document.getElementById("customerId");
         el.customerName = document.getElementById("customerName");
 
         el.fat = document.getElementById("fat");
@@ -52,388 +31,334 @@ const UI = (() => {
         el.amount = document.getElementById("amount");
 
         el.saveButton = document.getElementById("btnSave");
+        el.clearButton = document.getElementById("btnClear");
 
-        // Tabs
+        el.register = document.getElementById("registerContainer");
 
-        el.tabMilk = document.getElementById("tabMilk");
-        el.tabCash = document.getElementById("tabCash");
-        el.tabFeed = document.getElementById("tabFeed");
+        el.statusAnalyzer =
+            document.getElementById("statusAnalyzer");
 
-        // Register
+        el.statusWeight =
+            document.getElementById("statusWeight");
 
-        el.registerContainer =
-            document.getElementById("registerContainer");
+        el.statusSheets =
+            document.getElementById("statusSheets");
 
-        // Status
+        el.statusInternet =
+            document.getElementById("statusInternet");
 
-        el.internet =
-            document.getElementById("internetStatus");
+        el.waitingMessage =
+            document.getElementById("waitingMessage");
 
-        el.bluetooth =
-            document.getElementById("bluetoothStatus");
+    }
 
-        el.analyzer =
-            document.getElementById("analyzerStatus");
+    function init() {
 
-        el.sheet =
-            document.getElementById("sheetStatus");
+        cache();
+
+        bindEvents();
+
+        refreshDate();
+
+        refreshConnections();
+
+        clearForm();
+
+        Logger.success("UI Initialized");
 
     }
 
     function bindEvents() {
 
-        el.collectionDate?.addEventListener(
+        if (el.customerId) {
 
-            "change",
+            el.customerId.addEventListener(
+                "keydown",
+                onCustomerKey
+            );
 
-            onDateChanged
+        }
 
+        if (el.saveButton) {
+
+            el.saveButton.addEventListener(
+                "click",
+                save
+            );
+
+        }
+
+        if (el.clearButton) {
+
+            el.clearButton.addEventListener(
+                "click",
+                clearForm
+            );
+
+        }
+
+        window.addEventListener(
+            "online",
+            refreshConnections
         );
 
-        el.customerID?.addEventListener(
-
-            "keyup",
-
-            onCustomerID
-
-        );
-
-        el.saveButton?.addEventListener(
-
-            "click",
-
-            onSaveClicked
-
+        window.addEventListener(
+            "offline",
+            refreshConnections
         );
 
     }
 
-    function initializeDate() {
+    async function onCustomerKey(e) {
 
-        if (!el.collectionDate) return;
+        if (e.key !== "Enter") return;
 
-        el.collectionDate.value = Utils.today();
+        const id = el.customerId.value.trim();
 
-    }
+        if (!id) return;
 
-    function updateCycle() {
-
-        if (!el.cycleText) return;
-
-        const cycle =
-            Utils.tenDayCycle(el.collectionDate.value);
-
-        el.cycleText.textContent =
-            cycle.from + "  →  " + cycle.to;
+        await Customer.load(id);
 
     }
 
-    function updateConnectionIndicators() {
+    async function save() {
 
-        updateInternetStatus(navigator.onLine);
+        if (!State.readyToSave()) {
 
-        updateBluetoothStatus(false);
+            Logger.warning(
+                "Sample not ready."
+            );
 
-        updateAnalyzerStatus(false);
+            return;
 
-        updateSheetStatus(false);
+        }
 
-    }
+        await Transaction.saveMilk();
 
-    function updateInternetStatus(status) {
-
-        if (!el.internet) return;
-
-        el.internet.classList.toggle(
-
-            "connected",
-
-            status
-
-        );
-
-        el.internet.classList.toggle(
-
-            "disconnected",
-
-            !status
-
-        );
-
-        el.internet.innerText =
-            status ? "ONLINE" : "OFFLINE";
+        clearForm();
 
     }
 
-    function updateBluetoothStatus(status) {
+    function clearForm() {
 
-        if (!el.bluetooth) return;
+        if (el.customerId) el.customerId.value = "";
+        if (el.customerName) el.customerName.textContent = "";
 
-        el.bluetooth.classList.toggle(
+        if (el.fat) el.fat.value = "";
+        if (el.snf) el.snf.value = "";
+        if (el.clr) el.clr.value = "";
 
-            "connected",
+        if (el.qty) el.qty.value = "";
+        if (el.rate) el.rate.value = "";
+        if (el.amount) el.amount.value = "";
 
-            status
+        State.resetCustomer();
+        State.resetSample();
 
-        );
+        updateWaiting();
 
-        el.bluetooth.classList.toggle(
+        disableSave();
 
-            "disconnected",
-
-            !status
-
-        );
-
-        el.bluetooth.innerText =
-            status ? "CONNECTED" : "DISCONNECTED";
-
-    }
-
-    function updateAnalyzerStatus(status) {
-
-        if (!el.analyzer) return;
-
-        el.analyzer.classList.toggle(
-
-            "connected",
-
-            status
-
-        );
-
-        el.analyzer.classList.toggle(
-
-            "disconnected",
-
-            !status
-
-        );
-
-        el.analyzer.innerText =
-            status ? "READY" : "WAITING";
+        focusCustomer();
 
     }
 
-    function updateSheetStatus(status) {
-
-        if (!el.sheet) return;
-
-        el.sheet.classList.toggle(
-
-            "connected",
-
-            status
-
-        );
-
-        el.sheet.classList.toggle(
-
-            "disconnected",
-
-            !status
-
-        );
-
-        el.sheet.innerText =
-            status ? "CONNECTED" : "OFFLINE";
-
-    }
-
-    function loadCustomer(customer) {
+    function populateCustomer(customer) {
 
         if (!customer) return;
 
-        el.customerName.value =
-            customer.name;
+        if (el.customerName)
+            el.customerName.textContent =
+                customer.name;
+
+        State.customerSelected(customer);
+
+        updateWaiting();
+
+        enableIfReady();
 
     }
 
-    function updateAnalyzerValues(sample) {
+    function populateAnalyzer(sample) {
 
-        Utils.setValue("fat", sample.fat);
+        if (!sample) return;
 
-        Utils.setValue("snf", sample.snf);
+        el.fat.value = sample.fat ?? "";
+        el.snf.value = sample.snf ?? "";
+        el.clr.value = sample.clr ?? "";
+        el.qty.value = sample.qty ?? "";
 
-        Utils.setValue("clr", sample.clr);
+        State.analyzerReceived(sample);
 
-        Utils.setValue("qty", sample.qty);
+        updateWaiting();
 
-        Utils.setValue("rate", sample.rate);
-
-        Utils.setValue("amount", sample.amount);
-
-    }
-
-    function clearEntry() {
-
-        Utils.setValue("customerID", "");
-
-        Utils.setValue("customerName", "");
-
-        Utils.setValue("fat", "");
-
-        Utils.setValue("snf", "");
-
-        Utils.setValue("clr", "");
-
-        Utils.setValue("qty", "");
-
-        Utils.setValue("rate", "");
-
-        Utils.setValue("amount", "");
-
-        Utils.focus("customerID");
+        enableIfReady();
 
     }
 
-    function enableSave(enable) {
+    function updateRate(rate) {
+
+        el.rate.value = Utils.number(rate);
+
+    }
+
+    function updateAmount(amount) {
+
+        el.amount.value = Utils.money(amount);
+
+    }
+
+    function refreshRegister() {
+
+        Register.render();
+
+    }
+
+    function refreshConnections() {
+
+        updateIndicator(
+            el.statusInternet,
+            navigator.onLine
+        );
+
+        updateIndicator(
+            el.statusAnalyzer,
+            State.get("system.analyzerConnected")
+        );
+
+        updateIndicator(
+            el.statusWeight,
+            State.get("system.weightConnected")
+        );
+
+        updateIndicator(
+            el.statusSheets,
+            State.get("system.sheetConnected")
+        );
+
+    }
+
+    function updateIndicator(element, connected) {
+
+        if (!element) return;
+
+        element.classList.remove(
+            "online",
+            "offline"
+        );
+
+        if (connected) {
+
+            element.classList.add("online");
+
+        } else {
+
+            element.classList.add("offline");
+
+        }
+
+    }
+
+    function refreshDate() {
+
+        if (el.collectionDate) {
+
+            el.collectionDate.value =
+                Utils.today();
+
+        }
+
+    }
+
+    function updateWaiting() {
+
+        if (!el.waitingMessage) return;
+
+        const waitingCustomer =
+            State.get("waiting.customer");
+
+        const waitingAnalyzer =
+            State.get("waiting.analyzer");
+
+        if (waitingCustomer) {
+
+            el.waitingMessage.textContent =
+                "Waiting for Customer ID";
+
+            return;
+
+        }
+
+        if (waitingAnalyzer) {
+
+            el.waitingMessage.textContent =
+                "Waiting for Analyzer";
+
+            return;
+
+        }
+
+        el.waitingMessage.textContent =
+            "";
+
+    }
+
+    function enableIfReady() {
+
+        if (State.readyToSave()) {
+
+            enableSave();
+
+        }
+
+    }
+
+    function enableSave() {
 
         if (!el.saveButton) return;
 
-        el.saveButton.disabled = !enable;
+        el.saveButton.disabled = false;
 
     }
 
-    function scrollRegister(customerID) {
+    function disableSave() {
 
-        const column = document.querySelector(
+        if (!el.saveButton) return;
 
-            `[data-customer='${customerID}']`
-
-        );
-
-        if (!column) return;
-
-        column.scrollIntoView({
-
-            behavior: "smooth",
-
-            inline: "center",
-
-            block: "nearest"
-
-        });
+        el.saveButton.disabled = true;
 
     }
 
-    function refreshRegister(registerHTML) {
+    function focusCustomer() {
 
-        if (!el.registerContainer) return;
+        setTimeout(() => {
 
-        el.registerContainer.innerHTML =
-            registerHTML;
+            if (el.customerId)
+                el.customerId.focus();
 
-    }
+        }, 100);
 
-    function switchTab(name) {
-
-        document
-
-            .querySelectorAll(".entry-tab")
-
-            .forEach(tab => {
-
-                tab.classList.remove("active");
-
-            });
-
-        document
-
-            .querySelectorAll(".entry-page")
-
-            .forEach(page => {
-
-                page.style.display = "none";
-
-            });
-
-        document
-
-            .getElementById("tab" + name)
-
-            ?.classList.add("active");
-
-        document
-
-            .getElementById(name + "Page")
-
-            ?.style.display = "block";
-
-    }
-
-    function onCustomerID(e) {
-
-    if (e.key !== "Enter")
-        return;
-
-    Customer.select(
-
-        el.customerID.value
-
-    );
-
-}
-
-    function onDateChanged() {
-
-        updateCycle();
-
-    }
-
-    async function onSaveClicked() {
-    
-        const activeTab = document
-            .querySelector(".entry-tab.active")
-            ?.dataset.tab;
-    
-        switch (activeTab) {
-    
-            case "cash":
-    
-                await Transaction.saveCash();
-    
-                break;
-    
-            case "feed":
-    
-                await Transaction.saveFeed();
-    
-                break;
-    
-            default:
-    
-                await Transaction.saveMilk();
-    
-        }
-    
     }
 
     return {
 
-        initialize,
+        init,
 
-        loadCustomer,
+        clearForm,
 
-        updateAnalyzerValues,
+        populateCustomer,
 
-        updateInternetStatus,
+        populateAnalyzer,
 
-        updateBluetoothStatus,
+        updateRate,
 
-        updateAnalyzerStatus,
+        updateAmount,
 
-        updateSheetStatus,
-
-        clearEntry,
-
-        enableSave,
-
-        scrollRegister,
+        refreshConnections,
 
         refreshRegister,
 
-        switchTab
+        focusCustomer
 
     };
 

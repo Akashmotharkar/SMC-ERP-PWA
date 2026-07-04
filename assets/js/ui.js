@@ -362,11 +362,18 @@ const UI = (() => {
 
     }
 
-    function onCustomerID() {
+    function onCustomerID(e) {
 
-        // Customer lookup will be implemented later
+    if (e.key !== "Enter")
+        return;
 
-    }
+    Customer.select(
+
+        el.customerID.value
+
+    );
+
+}
 
     function onDateChanged() {
 

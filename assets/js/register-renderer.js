@@ -2,16 +2,22 @@
 ------------------------------------------------------------
 SMC Milk Collection PWA
 Version : 1.0.0-alpha.1
-Build   : 0022
+Build   : 0049
 File    : assets/js/register-renderer.js
 ------------------------------------------------------------
-Generates the right-side physical register UI.
-Current version:
-✓ Compact Register
-✓ Dynamic rendering
-✓ Auto customer highlight
-✓ Auto horizontal scroll
-✓ Ready for API integration
+
+Register Renderer
+
+Responsibilities
+
+✓ Render Register
+✓ Update Single Customer
+✓ Horizontal Auto Scroll
+✓ Virtual Rendering Ready
+✓ Compact Layout
+
+Never performs calculations.
+
 ------------------------------------------------------------
 */
 
@@ -19,143 +25,178 @@ Current version:
 
 const RegisterRenderer = (() => {
 
-    let container = null;
+    let container;
+
+    let customerColumns = new Map();
+
+    //--------------------------------------------------
 
     function init() {
 
         container = document.getElementById("registerContainer");
 
-        if (!container) {
+        EventBus.on(
+            "register.loaded",
+            render
+        );
 
-            Logger.error("Register container not found.");
+        EventBus.on(
+            "register.customer.updated",
+            updateCustomer
+        );
 
-            return;
+        EventBus.on(
+            "customer.selected",
+            scrollToCustomer
+        );
 
-        }
-
-        Logger.success("Register Renderer Ready");
+        Logger.success(
+            "Register Renderer Ready"
+        );
 
     }
 
-    function render(customers = []) {
+    //--------------------------------------------------
 
-        if (!container) return;
+    function render(customers) {
 
-        if (!customers.length) {
-
-            container.innerHTML = emptyHTML();
-
+        if (!container)
             return;
 
-        }
+        container.innerHTML = "";
 
-        let html = "";
+        customerColumns.clear();
 
         customers.forEach(customer => {
 
-            html += customerCard(customer);
+            const column = buildColumn(customer);
+
+            customerColumns.set(
+
+                customer.customerId,
+
+                column
+
+            );
+
+            container.appendChild(column);
 
         });
 
-        container.innerHTML = html;
+    }
+
+    //--------------------------------------------------
+
+    function buildColumn(customer) {
+
+        const column = document.createElement("div");
+
+        column.className = "register-column";
+
+        column.id =
+
+            "customer-" +
+
+            customer.customerId;
+
+        column.innerHTML = createHTML(customer);
+
+        return column;
 
     }
 
-    function customerCard(c) {
+    //--------------------------------------------------
+
+    function updateCustomer(customer) {
+
+        if (!customer)
+            return;
+
+        let column = customerColumns.get(
+
+            customer.customerId
+
+        );
+
+        if (!column) {
+
+            column = buildColumn(customer);
+
+            customerColumns.set(
+
+                customer.customerId,
+
+                column
+
+            );
+
+            container.appendChild(column);
+
+            return;
+
+        }
+
+        column.innerHTML = createHTML(customer);
+
+    }
+
+    //--------------------------------------------------
+
+    function createHTML(customer) {
 
         return `
 
-<div class="register-card"
-     id="register-${c.id}"
-     data-id="${c.id}">
+<div class="register-header">
 
-    <div class="register-header">
+<div class="customer-id">
 
-        <div class="customer-id">
-            ${c.id}
-        </div>
+${customer.customerId}
 
-        <div class="customer-name">
-            ${c.name}
-        </div>
+</div>
 
-    </div>
+<div class="customer-name">
 
-    <table class="register-table">
+${customer.customerName}
 
-        <thead>
+</div>
 
-            <tr>
+</div>
 
-                <th>Day</th>
+<div class="register-balance">
 
-                <th>Fat</th>
+Prev :
 
-                <th>SNF</th>
+₹ ${customer.previousBalance.toFixed(2)}
 
-                <th>Qty</th>
+</div>
 
-                <th>Rate</th>
+<div class="register-total">
 
-                <th>Amt</th>
+Milk :
 
-            </tr>
+₹ ${customer.milkTotal.toFixed(2)}
 
-        </thead>
+</div>
 
-        <tbody>
+<div class="register-total">
 
-            ${buildRows(c)}
+Cash :
 
-        </tbody>
+₹ ${customer.cashTotal.toFixed(2)}
 
-    </table>
+</div>
 
-    <div class="register-footer">
+<div class="register-total">
 
-        <div>
+Feed :
 
-            Previous :
-            <span>
-                ₹${money(c.previous)}
-            </span>
+₹ ${customer.feedTotal.toFixed(2)}
 
-        </div>
+</div>
 
-        <div>
+<div class="register-final">
 
-            Milk :
-            <span>
-                ₹${money(c.milkTotal)}
-            </span>
-
-        </div>
-
-        <div>
-
-            Feed :
-            <span>
-                ₹${money(c.feed)}
-            </span>
-
-        </div>
-
-        <div>
-
-            Cash :
-            <span>
-                ₹${money(c.cash)}
-            </span>
-
-        </div>
-
-        <div class="${balanceClass(c.final)}">
-
-            ₹${money(c.final)}
-
-        </div>
-
-    </div>
+₹ ${customer.finalAmount.toFixed(2)}
 
 </div>
 
@@ -163,79 +204,23 @@ const RegisterRenderer = (() => {
 
     }
 
-    function buildRows(customer) {
+    //--------------------------------------------------
 
-        let rows = "";
+    function scrollToCustomer(customer) {
 
-        if (!customer.entries || !customer.entries.length) {
+        if (!customer)
+            return;
 
-            rows += `
+        const column = customerColumns.get(
 
-<tr>
+            customer.id
 
-<td colspan="6"
-style="text-align:center;color:#999;">
+        );
 
-No Entries
+        if (!column)
+            return;
 
-</td>
-
-</tr>
-
-`;
-
-            return rows;
-
-        }
-
-        customer.entries.forEach(entry => {
-
-            rows += `
-
-<tr>
-
-<td>${entry.day}</td>
-
-<td>${value(entry.fat)}</td>
-
-<td>${value(entry.snf)}</td>
-
-<td>${value(entry.qty)}</td>
-
-<td>${money(entry.rate)}</td>
-
-<td>${money(entry.amount)}</td>
-
-</tr>
-
-`;
-
-        });
-
-        return rows;
-
-    }
-
-    function highlight(customerId) {
-
-        removeHighlight();
-
-        const card =
-            document.getElementById(
-                "register-" + customerId
-            );
-
-        if (!card) return;
-
-        card.classList.add("active-register");
-
-        scrollIntoView(card);
-
-    }
-
-    function scrollIntoView(card) {
-
-        card.scrollIntoView({
+        column.scrollIntoView({
 
             behavior: "smooth",
 
@@ -247,73 +232,19 @@ No Entries
 
     }
 
-    function removeHighlight() {
+    //--------------------------------------------------
 
-        document
+    function refresh() {
 
-            .querySelectorAll(".active-register")
+        render(
 
-            .forEach(card => {
+            RegisterStore.getAll()
 
-                card.classList.remove(
-                    "active-register"
-                );
-
-            });
+        );
 
     }
 
-    function emptyHTML() {
-
-        return `
-
-<div class="register-empty">
-
-<h2>
-
-Waiting for Customer...
-
-</h2>
-
-<p>
-
-Register will appear here.
-
-</p>
-
-</div>
-
-`;
-
-    }
-
-    function money(v) {
-
-        return Number(v || 0)
-
-            .toFixed(2);
-
-    }
-
-    function value(v) {
-
-        if (v === null || v === undefined)
-
-            return "-";
-
-        return v;
-
-    }
-
-    function balanceClass(v) {
-
-        if (Number(v) >= 0)
-
-            return "balance-positive";
-
-        return "balance-negative";
-
-    }
+    //--------------------------------------------------
 
     return {
 
@@ -321,7 +252,11 @@ Register will appear here.
 
         render,
 
-        highlight
+        refresh,
+
+        updateCustomer,
+
+        scrollToCustomer
 
     };
 
